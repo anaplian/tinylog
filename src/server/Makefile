@@ -17,8 +17,7 @@ run: venv
 check: test
 
 test: venv
-	@venv/bin/python3 -m nose -s
+	@venv/bin/python3 tinylogserver/manage.py test tinylogserver/api/tests
 
 lint: venv
-	@venv/bin/python3 -m pylint ./**/*.py
-
+	@venv/bin/pylint ./tinylogserver/**/*.py

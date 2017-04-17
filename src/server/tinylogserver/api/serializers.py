@@ -1,26 +1,28 @@
 """TinyLog API Serializers"""
 
-from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from . import models
+from core import models as core_models
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = User
-        fields = ('url', 'username', 'email')
+        model = core_models.TinyLogUser
+        fields = ('url', 'username', 'display_name', 'password')
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
 
 
 class TinyLogEntrySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = models.TinyLogEntry
-        fields = ('url', 'owner', 'text_content', 'date_logged')
+        model = core_models.TinyLogEntry
+        fields = ('url', 'created_by', 'text_content', 'date_logged')
 
 
 class TinyLogSerializer(serializers.HyperlinkedModelSerializer):
     log_entries = TinyLogEntrySerializer(many=True)
 
     class Meta:
-        model = models.TinyLog
+        model = core_models.TinyLog
         fields = ('url', 'name', 'description', 'members', 'log_entries')

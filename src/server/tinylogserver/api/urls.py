@@ -1,12 +1,14 @@
 """TinyLog API URL Configuration"""
 
 from django.conf.urls import include, url
-from rest_framework import routers
+from rest_framework import (
+    routers as rest_framework_routers,
+)
 
 from api import views
 
 
-class APIRouter(routers.DefaultRouter):
+class APIRouter(rest_framework_routers.DefaultRouter):
     def __init__(self, allowed_prefixes, *args, **kwargs):
         self._allowed_prefixes = allowed_prefixes
         super(APIRouter, self).__init__(*args, **kwargs)

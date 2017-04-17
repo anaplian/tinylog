@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'core',
     'api',
 ]
 
@@ -121,7 +122,18 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-#Django rest framework config
+
+# Authentication
+
+AUTH_USER_MODEL = 'core.TinyLogUser'
+
+
+# Misc
+
+APPEND_SLASH = False
+
+
+# Django Rest Framework
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
