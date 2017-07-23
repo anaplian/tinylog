@@ -12,7 +12,7 @@ venv:
 
 run: venv
 	@echo "Running tinylog_server..."
-	@FLASK_APP=tinylog_server/app.py venv/bin/flask run --host=0.0.0.0 --port=8000
+	@scripts/run
 
 check: test
 

@@ -16,14 +16,6 @@ CONFIG = envpy.get_config({
 })
 
 
-@app.route('/')
-def hello_world():
-    """Return a greeting page when the index is requested"""
-    return 'Welcome to TinyLog {env}'.format(
-        env=CONFIG['ENV'],
-    )
-
-
 def init():
     # Init logging
     logging_handler = logging.StreamHandler()
@@ -36,3 +28,12 @@ def init():
     # Log current config
     app.logger.info('Config loaded: %s', CONFIG)
 init()
+
+
+# Handlers
+@app.route('/')
+def hello_world():
+    """Return a greeting page when the index is requested"""
+    return 'Welcome to TinyLog {env}'.format(
+        env=CONFIG['ENV'],
+    )

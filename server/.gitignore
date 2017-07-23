@@ -27,3 +27,6 @@ nosetests.xml
 
 # Venv
 venv/
+
+# Don't commit .env file - can contain secrets!
+.env

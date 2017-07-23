@@ -1,0 +1,6 @@
+#!/bin/bash
+export $(cat .env | xargs ) || true
+export ENV=DEV
+export FLASK_DEBUG=1
+export FLASK_APP=tinylog_server/app.py
+venv/bin/flask run --host=0.0.0.0 --port=8000
