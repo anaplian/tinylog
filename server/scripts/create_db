@@ -13,29 +13,29 @@ with app.app_context():
     models.DB.create_all()
     models.DB.session.add(
         models.User(
-            "thegoodwife",
+            "aflorrick",
             "somethingsecure123",
             "Alicia",
         ),
     )
     models.DB.session.add(
         models.User(
-            "thebachelor",
+            "wgardner",
             "stillinlovewithalicia",
             "Will Gardner",
         ),
     )
     models.DB.session.add(
         models.User(
-            "ladylaw",
+            "dlockhart",
             "thebitchisback",
             "Dianne",
         ),
     )
     models.DB.session.add(
         models.User(
-            "crisismaster",
-            "gethimthepresidency",
+            "egold",
+            "goddamnitbecca",
             "Eli Gold",
         ),
     )
