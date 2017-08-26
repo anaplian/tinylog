@@ -1,5 +1,6 @@
 """Main application entrypoint for the TinyLog API"""
 
+import functools
 import logging
 import os
 
@@ -51,6 +52,40 @@ def init():
     # Register app with SQLAlchemy
     tiny_models.DB.init_app(app)
 init()
+
+
+# Decorators
+
+def authorized(view):
+    @functools.wraps(view)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+
+        # Check auth header is provided
+        if auth_header is None:
+            return jsonify('Authorization header is required'), 400
+
+        # Check auth header is valid
+        auth_parts = auth_header.split(' ')
+        if len(auth_parts) != 2:
+            return jsonify('Invalid Authorization header'), 400
+
+        auth_type, access_token = auth_parts
+        if auth_type != 'tinylog':
+            return jsonify('Unsupported auth type'), 400
+
+        # Check session exists
+        session = tiny_models.Session.query.filter_by(
+            access_token=access_token).first()
+        if (
+            session is None:
+            or not session.is_valid
+        ):
+            return jsonify('Invalid access token'), 403
+
+        return view(session, *args, **kwargs)
+
+    return wrapper
 
 
 # Views
@@ -117,13 +152,59 @@ def users():
 
         return jsonify('User created successfully'), 201
 
-
 @app.route('/users/<username>/', methods=['GET'])
 def user(username):
     """Return the details of a particular user"""
     selected_user = tiny_models.User.query.filter_by(username=username).first()
     if selected_user is None:
         abort(404, 'User does not exist.')
+    return jsonify(selected_user.to_dict(request.url_root))
+
+@app.route('/login/', methods=['POST'])
+def login():
+    """Try to login using the given credentials"""
+    request_data = request.json or {}
+    username = request_data.get('username')
+    password = request_data.get('password')
+
+    # Validate input
+    if username is None:
+        return jsonify('Username is not required'), 400
+    if password is None:
+        return jsonify('Password is not required'), 400
+
+    # Check the username/password combo is correct
+    selected_user = tiny_models.User.query.filter_by(username=username).first()
+    good_creds = (
+        selected_user is not None
+        and selected_user.is_correct_password(password)
+    )
+    if not good_creds:
+        return jsonify('Incorrect username/password'), 403
+
+    # Create a new session
+    session = tiny_models.Session(selected_user.id)
+    tiny_models.DB.session.add(session)
+    tiny_models.DB.session.commit()
+
+    return jsonify({
+        'success': True,
+        'access_token': session.access_token,
+    }), 200
+
+@app.route('/logout/', methods=['POST'])
+@authorized
+def logout(session):
+    """Invalidate the given access token"""
+    tiny_models.DB.session.delete(session)
+    tiny_models.DB.session.commit()
+    return jsonify("Logged out successfully")
+
+@app.route('/current-user/', methods=['GET'])
+@authorized
+def current_user(session):
+    """Return the currently logged in user"""
+    selected_user = tiny_models.User.query.filter_by(id=session.user_id).first()
     return jsonify(selected_user.to_dict(request.url_root))
 
 

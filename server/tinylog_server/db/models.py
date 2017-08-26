@@ -1,5 +1,6 @@
 """Database models for TinyLog"""
 
+import datetime
 import os
 import uuid
 
@@ -11,6 +12,7 @@ PWD_CONTEXT = CryptContext(
     schemes=["argon2", "pbkdf2_sha256", "des_crypt"],
     deprecated="auto",
 )
+SESSION_LENGTH = datetime.timedelta(hours=3)
 
 
 class User(DB.Model):
@@ -37,6 +39,26 @@ class User(DB.Model):
 
     def is_correct_password(self, password):
         return PWD_CONTEXT.verify(password, self.password_hash)
+
+
+class Session(DB.Model):
+    access_token = DB.Column(DB.String(36), primary_key=True)
+    user_id = DB.Column(DB.String, DB.ForeignKey('user.id'))
+    created_at = DB.Column(DB.DateTime)
+    expires_at = DB.Column(DB.DateTime)
+
+    def __init__(self, user_id):
+        self.access_token = str(uuid.uuid4())
+        self.user_id = user_id
+        self.created_at = datetime.datetime.utcnow()
+        self.expires_at = datetime.datetime.utcnow() + SESSION_LENGTH
+
+    def __repr__(self):
+        return '<Session {}>'.format(self.user_id)
+
+    @property
+    def is_valid(self):
+        return datetime.datetime.utcnow() < self.expires_at
 
 
 def make_url(url_root, path):
