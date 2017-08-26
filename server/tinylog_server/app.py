@@ -78,7 +78,7 @@ def authorized(view):
         session = tiny_models.Session.query.filter_by(
             access_token=access_token).first()
         if (
-            session is None:
+            session is None
             or not session.is_valid
         ):
             return jsonify('Invalid access token'), 403
