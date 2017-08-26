@@ -188,7 +188,6 @@ def login():
     tiny_models.DB.session.commit()
 
     return jsonify({
-        'success': True,
         'access_token': session.access_token,
     }), 200
 
