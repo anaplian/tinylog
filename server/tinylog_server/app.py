@@ -1,9 +1,13 @@
 """Main application entrypoint for the TinyLog API"""
 
 import logging
+import os
 
 import envpy
-from flask import Flask
+from flask import Flask, abort, jsonify, request
+
+from tinylog_server import recaptcha
+from tinylog_server.db import models as tiny_models
 
 # This doesn't conform to PEP-8 but it is idiomatic for Flask
 app = Flask(__name__) #pylint: disable=C0103
@@ -11,7 +15,19 @@ app = Flask(__name__) #pylint: disable=C0103
 CONFIG = envpy.get_config({
     "ENV": envpy.Schema(
         value_type=str,
-        default="PROD"
+        default="PROD",
+    ),
+    "CAPTCHA_CHALLENGE": envpy.Schema(
+        value_type=str,
+    ),
+    "DATABASE_DSN": envpy.Schema(
+        value_type=str,
+    ),
+})
+
+SECRETS = envpy.get_config({
+    "CAPTCHA_SECRET": envpy.Schema(
+        value_type=str,
     ),
 })
 
@@ -27,13 +43,88 @@ def init():
 
     # Log current config
     app.logger.info('Config loaded: %s', CONFIG)
+
+    # Configure Flask App
+    app.config['SQLALCHEMY_DATABASE_URI'] = CONFIG['DATABASE_DSN']
+
+    # Register app with SQLAlchemy
+    tiny_models.DB.init_app(app)
 init()
 
 
-# Handlers
+# Views
+
 @app.route('/')
-def hello_world():
-    """Return a greeting page when the index is requested"""
-    return 'Welcome to TinyLog {env}'.format(
-        env=CONFIG['ENV'],
-    )
+def index():
+    """Return API Index"""
+    return jsonify({
+        'users': make_url(request, 'users'),
+    })
+
+@app.route('/captcha_challenge')
+def captcha_challenge():
+    """Returns the token needed to perform a captcha check"""
+    return jsonify(CONFIG['CAPTCHA_CHALLENGE'])
+
+@app.route('/users/', methods=['GET', 'POST'])
+def users():
+    """View and manage users"""
+    if request.method == 'GET':
+        all_users = tiny_models.User.query.all()
+        return jsonify({
+            'users': [user.to_dict(request.url_root) for user in all_users],
+        })
+
+    elif request.method == 'POST':
+        request_data = request.json or {}
+        captcha_token = request_data.get('captcha_token')
+        username = request_data.get('username')
+        email = request_data.get('email')
+        password = request_data.get('password')
+        display_name = request_data.get('display_name')
+
+        # Validata captcha token
+        if captcha_token is None or not recaptcha.valid_captcha_token(
+            SECRETS['CAPTCHA_SECRET'],
+            captcha_token
+        ):
+            return jsonify('Invalid captcha token'), 400
+
+        # Validate user data
+        ## Username is required
+        if username is None:
+            return jsonify('Username is required'), 400
+        ## Username must be unique
+        existing_user = tiny_models.User.query.filter_by(
+            username=username).first()
+        if existing_user is not None:
+            return jsonify('Username is not available'), 400
+        ## Password is required
+        if password is None:
+            return jsonify('Password is required'), 400
+
+        # Create user in db
+        new_user = tiny_models.User(
+            username=username,
+            password=password,
+            display_name=display_name,
+        )
+        tiny_models.DB.session.add(new_user)
+        tiny_models.DB.session.commit()
+
+        return jsonify('User created successfully')
+
+
+@app.route('/users/<username>/', methods=['GET'])
+def user(username):
+    """Return the details of a particular user"""
+    user = tiny_models.User.query.filter_by(username=username).first()
+    if user is None:
+        abort(404, 'User does not exist.')
+    return jsonify(user.to_dict(request.url_root))
+
+
+# Utilities
+
+def make_url(request, path):
+    return os.path.join(request.url_root, path)

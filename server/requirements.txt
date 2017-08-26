@@ -1,3 +1,7 @@
+argon2_cffi
 envpy
 flask==0.12.2
+flask_sqlalchemy
+passlib
+requests
 voluptuous==0.9.3

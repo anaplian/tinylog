@@ -30,3 +30,6 @@ venv/
 
 # Don't commit .env file - can contain secrets!
 .env
+
+# Local sqlite db
+dev.db

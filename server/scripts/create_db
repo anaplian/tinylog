@@ -1,0 +1,42 @@
+#!./venv/bin/python3
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+from tinylog_server.db import models
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../dev.db'
+
+models.DB.init_app(app)
+with app.app_context():
+    models.DB.create_all()
+    models.DB.session.add(
+        models.User(
+            "thegoodwife",
+            "somethingsecure123",
+            "Alicia",
+        ),
+    )
+    models.DB.session.add(
+        models.User(
+            "thebachelor",
+            "stillinlovewithalicia",
+            "Will Gardner",
+        ),
+    )
+    models.DB.session.add(
+        models.User(
+            "ladylaw",
+            "thebitchisback",
+            "Dianne",
+        ),
+    )
+    models.DB.session.add(
+        models.User(
+            "crisismaster",
+            "gethimthepresidency",
+            "Eli Gold",
+        ),
+    )
+    models.DB.session.commit()

@@ -25,3 +25,6 @@ acceptance_test: venv
 lint: venv
 	@venv/bin/python3 -m pylint ./tinylog_server/*.py
 
+db:
+	@rm -f dev.db
+	@/bin/bash -c "PYTHONPATH=$$PYTHONPATH:$$(pwd p) ./scripts/create_db"

@@ -1,6 +1,10 @@
 #!/bin/bash
-export $(cat .env | xargs ) || true
 export ENV=DEV
 export FLASK_DEBUG=1
 export FLASK_APP=tinylog_server/app.py
+export DATABASE_DSN=sqlite:///../dev.db
+export CAPTCHA_CHALLENGE=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+export CAPTCHA_SECRET=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+export $(cat .env | xargs ) || true
+
 venv/bin/flask run --host=0.0.0.0 --port=8000
