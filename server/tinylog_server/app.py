@@ -33,6 +33,7 @@ SECRETS = envpy.get_config({
 
 
 def init():
+    """Initialise app"""
     # Init logging
     logging_handler = logging.StreamHandler()
     logging_formatter = logging.Formatter(\
@@ -79,14 +80,16 @@ def users():
         request_data = request.json or {}
         captcha_token = request_data.get('captcha_token')
         username = request_data.get('username')
-        email = request_data.get('email')
         password = request_data.get('password')
         display_name = request_data.get('display_name')
 
         # Validata captcha token
-        if captcha_token is None or not recaptcha.valid_captcha_token(
-            SECRETS['CAPTCHA_SECRET'],
-            captcha_token
+        if (
+                captcha_token is None
+                or not recaptcha.valid_captcha_token(
+                    SECRETS['CAPTCHA_SECRET'],
+                    captcha_token
+                )
         ):
             return jsonify('Invalid captcha token'), 400
 
@@ -118,13 +121,14 @@ def users():
 @app.route('/users/<username>/', methods=['GET'])
 def user(username):
     """Return the details of a particular user"""
-    user = tiny_models.User.query.filter_by(username=username).first()
-    if user is None:
+    selected_user = tiny_models.User.query.filter_by(username=username).first()
+    if selected_user is None:
         abort(404, 'User does not exist.')
-    return jsonify(user.to_dict(request.url_root))
+    return jsonify(selected_user.to_dict(request.url_root))
 
 
 # Utilities
 
-def make_url(request, path):
-    return os.path.join(request.url_root, path)
+def make_url(current_request, path):
+    """Generate an absolute URL from the request and relative path"""
+    return os.path.join(current_request.url_root, path)
