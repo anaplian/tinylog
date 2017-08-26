@@ -20,6 +20,7 @@ test: venv
 	@venv/bin/python3 -m nose -s
 
 acceptance_test: venv
+	@make db
 	@venv/bin/behave acceptance_tests
 
 lint: venv

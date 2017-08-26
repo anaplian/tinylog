@@ -1,6 +1,7 @@
 """Step definitions for acceptance tests"""
 
 import requests
+import os
 
 BASE_URL = 'http://localhost:8000'
 TEST_USER_CREATED = False
@@ -116,3 +117,95 @@ def step_impl(context):
         'Authorization': 'tinylog ' + context.access_token,
     })
     assert not response.ok
+
+
+# Log Management
+
+## Log Creation
+
+@step(u'the user tries to create a new log')
+def step_impl(context):
+    response = requests.post(
+        BASE_URL + '/logs/',
+        headers={
+            'Authorization': 'tinylog ' + context.access_token,
+        },
+        json={
+            'name': 'Project named partner',
+            'description': 'My attempts to found my own firm',
+        },
+    )
+    assert response.ok
+    context.log_url = response.json().get('_link')
+
+@then(u'the log should be available at the returned url')
+def step_impl(context):
+    response = requests.get(context.log_url, headers={
+        'Authorization': 'tinylog ' + context.access_token,
+    })
+    assert response.ok
+
+    expected_response = {
+        '_link': context.log_url,
+        'name': 'Project named partner',
+        'description': 'My attempts to found my own firm',
+        'entries': [],
+    }
+    actual_response = response.json()
+    assert expected_response == actual_response
+
+@then(u'the log should be listed at the /logs endpoint')
+def step_impl(context):
+    response = requests.get(BASE_URL + '/logs/', headers={
+        'Authorization': 'tinylog ' + context.access_token,
+    })
+
+    assert any([
+        log['_link'] == context.log_url
+        for log in response.json().get('logs')
+    ])
+
+## Log Entry Creation
+
+@when(u'the user tries to create a new log entry')
+def step_impl(context):
+    response = requests.post(
+        os.path.join(context.log_url, 'entries/'),
+        headers={
+            'Authorization': 'tinylog ' + context.access_token,
+        },
+        json={
+            'title': 'Brick Walls',
+            'description': 'Check out that old t-shirt factory',
+        },
+    )
+    assert response.ok
+    context.entry_url = response.json().get('_link')
+
+@then(u'the log entry should be available at the returned url')
+def step_impl(context):
+    response = requests.get(context.entry_url, headers={
+        'Authorization': 'tinylog ' + context.access_token,
+    })
+    assert response.ok
+
+    expected_response = {
+        '_link': context.entry_url,
+        'title': 'Brick Walls',
+        'description': 'Check out that old t-shirt factory',
+        'log': context.log_url,
+        'author': BASE_URL + '/users/agos',
+    }
+    actual_response = response.json()
+    assert expected_response == actual_response
+
+@then(u'the log should be listed in the parent log object')
+def step_impl(context):
+    response = requests.get(context.log_url, headers={
+        'Authorization': 'tinylog ' + context.access_token,
+    })
+
+    assert any([
+        entry['_link'] == context.entry_url
+        for entry in response.json().get('entries')
+    ])

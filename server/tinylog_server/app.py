@@ -21,13 +21,13 @@ CONFIG = envpy.get_config({
     "CAPTCHA_CHALLENGE": envpy.Schema(
         value_type=str,
     ),
-    "DATABASE_DSN": envpy.Schema(
-        value_type=str,
-    ),
 })
 
 SECRETS = envpy.get_config({
     "CAPTCHA_SECRET": envpy.Schema(
+        value_type=str,
+    ),
+    "DATABASE_DSN": envpy.Schema(
         value_type=str,
     ),
 })
@@ -47,7 +47,7 @@ def init():
     app.logger.info('Config loaded: %s', CONFIG)
 
     # Configure Flask App
-    app.config['SQLALCHEMY_DATABASE_URI'] = CONFIG['DATABASE_DSN']
+    app.config['SQLALCHEMY_DATABASE_URI'] = SECRETS['DATABASE_DSN']
 
     # Register app with SQLAlchemy
     tiny_models.DB.init_app(app)
@@ -89,6 +89,8 @@ def authorized(view):
 
 
 # Views
+
+## User views
 
 @app.route('/')
 def index():
@@ -169,9 +171,9 @@ def login():
 
     # Validate input
     if username is None:
-        return jsonify('Username is not required'), 400
+        return jsonify('Username is required'), 400
     if password is None:
-        return jsonify('Password is not required'), 400
+        return jsonify('Password is required'), 400
 
     # Check the username/password combo is correct
     selected_user = tiny_models.User.query.filter_by(username=username).first()
@@ -205,6 +207,100 @@ def current_user(session):
     """Return the currently logged in user"""
     selected_user = tiny_models.User.query.filter_by(id=session.user_id).first()
     return jsonify(selected_user.to_dict(request.url_root))
+
+
+## Log views
+
+@app.route('/logs/', methods=['GET', 'POST'])
+@authorized
+def logs(_):
+    """All logs available to the current user"""
+    if request.method == 'GET':
+        # Until we have permissions, all users can access all logs
+        all_logs = tiny_models.Log.query.all()
+        return jsonify({
+            'logs': [log.to_dict(request.url_root) for log in all_logs],
+        })
+
+    elif request.method == 'POST':
+        request_data = request.json or {}
+        name = request_data.get('name')
+        description = request_data.get('description')
+
+        # Validate input
+        if name is None:
+            return jsonify('Log name is required'), 400
+        if description is None:
+            return jsonify('Log description is required'), 400
+
+        # Create Log
+        log = tiny_models.Log(
+            name=name,
+            description=description,
+        )
+        tiny_models.DB.session.add(log)
+        tiny_models.DB.session.commit()
+
+        return jsonify(log.to_dict(request.url_root)), 201
+
+@app.route('/logs/<log_id>/', methods=['GET'])
+@authorized
+def log(_, log_id):
+    """A specific log"""
+    selected_log = tiny_models.Log.query.filter_by(id=log_id).first()
+    if selected_log is None:
+        jsonify('Log does not exist.'), 404
+    return jsonify(selected_log.to_dict(request.url_root))
+
+@app.route('/logs/<log_id>/entries/', methods=['GET', 'POST'])
+@authorized
+def entries(session, log_id):
+    """All log entries for a given log"""
+    log = tiny_models.Log.query.filter_by(id=log_id).first()
+    if log is None:
+        return jsonify('No such log'), 404
+
+    if request.method == 'GET':
+        entries = tiny_models.Entry.query.filter_by(log_id=log_id)
+        return jsonify({
+            'entries': [entry.to_dict(request.url_root) for entry in entries],
+        })
+
+    elif request.method == 'POST':
+        request_data = request.json or {}
+        title = request_data.get('title')
+        description = request_data.get('description')
+
+        # Validate input
+        if title is None:
+            return jsonify('Log Entry title is required'), 400
+        if description is None:
+            return jsonify('Log Entry description is required'), 400
+
+        # Create Entry
+        entry = tiny_models.Entry(
+            title=title,
+            description=description,
+            log_id=log_id,
+            author_id=session.user_id,
+        )
+        tiny_models.DB.session.add(entry)
+        tiny_models.DB.session.commit()
+
+        return jsonify(entry.to_dict(request.url_root)), 201
+
+@app.route('/logs/<log_id>/entries/<entry_id>/', methods=['GET'])
+@authorized
+def entry(_, log_id, entry_id):
+    """A specific log entry"""
+    selected_entry = tiny_models.Entry.query.filter_by(id=entry_id).first()
+    if (
+        selected_entry is None
+        or not selected_entry.log.id != log_id
+    ):
+        jsonify('Log Entry does not exist.'), 404
+
+    return jsonify(selected_entry.to_dict(request.url_root))
 
 
 # Utilities

@@ -11,13 +11,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../dev.db'
 models.DB.init_app(app)
 with app.app_context():
     models.DB.create_all()
-    models.DB.session.add(
-        models.User(
-            "aflorrick",
-            "somethingsecure123",
-            "Alicia",
-        ),
-    )
+
+    # Create users
     models.DB.session.add(
         models.User(
             "wgardner",
@@ -39,4 +34,45 @@ with app.app_context():
             "Eli Gold",
         ),
     )
+
+    alicia = models.User(
+        "aflorrick",
+        "somethingsecure123",
+        "Alicia",
+    )
+    models.DB.session.add(alicia)
+
+    # Logs
+    case_history = models.Log(
+        name="Case History",
+        description="Notes on my first year cases at Lockhart Gardner",
+    )
+    models.DB.session.add(case_history)
+
+    models.DB.session.add(
+        models.Entry(
+            title="My first case",
+            description="Kalinda found some evidence that saved the day!",
+            author_id=alicia.id,
+            log_id=case_history.id,
+        ),
+    )
+    models.DB.session.add(
+        models.Entry(
+            title="Case #2",
+            description="We were really struggling but then Kalinda found some unexpected evidence.",
+            author_id=alicia.id,
+            log_id=case_history.id,
+        ),
+    )
+    models.DB.session.add(
+        models.Entry(
+            title="Case #3",
+            description="Kalinda.",
+            author_id=alicia.id,
+            log_id=case_history.id,
+        ),
+    )
+
+
     models.DB.session.commit()
