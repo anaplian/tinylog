@@ -15,7 +15,7 @@ def step_impl(context):
 
 @given(u'the client has correctly solved the captcha')
 def step_impl(context):
-    captcha_challenge = requests.get(BASE_URL + '/captcha_challenge').json()
+    captcha_challenge = requests.get(BASE_URL + '/captcha-challenge').json()
     assert len(captcha_challenge) > 0
 
 @when(u'a post request is made to the /users resource')
