@@ -1,22 +1,55 @@
 /* styles in src/style directory are applied to the whole page */
 body {
-  background: #0147A7;
-  color: #fff;
+  min-height: 100vh;
+  background: #ff6e7f;
+  background: -moz-linear-gradient(-45deg, #ff6e7f 0%, #bfe9ff 100%);
+  background: -webkit-linear-gradient(-45deg, #ff6e7f 0%,#bfe9ff 100%);
+  background: linear-gradient(135deg, #ff6e7f 0%,#bfe9ff 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff6e7f', endColorstr='#bfe9ff',GradientType=1 );
 }
 
 a {
   color: #03A9F4;
 }
 
-main {
-  padding: 1em;
-  font-family: Arial, Helvetica, sans-serif;
-  text-align: center;
-  margin-top: 50px;
+root {
+  padding: 0;
+  font-family: 'Raleway', Arial, Helvetica, sans-serif;
+  font-size: 0.8em;
+  margin: 5vh auto;
   display: block;
+  width: 90vw;
+  height: 90vh;
 }
 
-footer {
-  text-align: center;
-  font-size: 0.8em;
+navigation {
+  background: #000;
+  color: lightgray;
+  height: 100%;
+  float: left;
+  width: 20%;
+}
+
+log {
+  background: #fafafa;
+  height: 90%;
+  width: 80%;
+  float: right;
+  position: relative;
+}
+
+search {
+  background: #fff;
+  width: 80%;
+  height: 10%;
+  border-bottom: 1px solid #efefef;
+  float: right;
+}
+
+.entry {
+  background: #fff;
+  margin: 15% auto;
+  border: 1px solid #efefef;
+  width: 400px;
+  height: 200px;
 }
