@@ -158,7 +158,7 @@ def users():
         tiny_models.DB.session.add(new_user)
         tiny_models.DB.session.commit()
 
-        return jsonify('User created successfully'), 201
+        return jsonify(new_user.to_dict(request.url_root)), 201
 
 @app.route('/users/<username>/', methods=['GET'])
 def user(username):
