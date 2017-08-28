@@ -6,12 +6,14 @@ import os
 
 import envpy
 from flask import Flask, abort, jsonify, request
+from flask_cors import CORS, cross_origin
 
 from tinylog_server import recaptcha
 from tinylog_server.db import models as tiny_models
 
 # This doesn't conform to PEP-8 but it is idiomatic for Flask
 app = Flask(__name__) #pylint: disable=C0103
+CORS(app)
 
 CONFIG = envpy.get_config({
     "ENV": envpy.Schema(

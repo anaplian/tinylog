@@ -1,6 +1,7 @@
 argon2_cffi
 envpy
 flask==0.12.2
+flask-cors
 flask_sqlalchemy
 passlib
 requests
