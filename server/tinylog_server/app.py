@@ -102,6 +102,7 @@ def index():
     """Return API Index"""
     return jsonify({
         'users': make_url(request, 'users'),
+        'logs': make_url(request, 'logs'),
     })
 
 @app.route('/captcha_challenge')
