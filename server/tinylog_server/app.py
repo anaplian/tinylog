@@ -59,20 +59,25 @@ init()
 def authorized(view):
     @functools.wraps(view)
     def wrapper(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
+        # Try and get the auth token from url params
+        access_token = request.args.get('access_token')
 
-        # Check auth header is provided
-        if auth_header is None:
-            return jsonify('Authorization header is required'), 400
+        # Check the header if not
+        if access_token is None:
+            auth_header = request.headers.get('Authorization')
 
-        # Check auth header is valid
-        auth_parts = auth_header.split(' ')
-        if len(auth_parts) != 2:
-            return jsonify('Invalid Authorization header'), 400
+            # Check auth header is provided
+            if auth_header is None:
+                return jsonify('Authorization header is required'), 400
 
-        auth_type, access_token = auth_parts
-        if auth_type != 'tinylog':
-            return jsonify('Unsupported auth type'), 400
+            # Check auth header is valid
+            auth_parts = auth_header.split(' ')
+            if len(auth_parts) != 2:
+                return jsonify('Invalid Authorization header'), 400
+
+            auth_type, access_token = auth_parts
+            if auth_type != 'tinylog':
+                return jsonify('Unsupported auth type'), 400
 
         # Check session exists
         session = tiny_models.Session.query.filter_by(
