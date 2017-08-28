@@ -107,7 +107,7 @@ def index():
         'logs': make_url(request, 'logs'),
     })
 
-@app.route('/captcha-challenge')
+@app.route('/captcha-challenge/')
 def captcha_challenge():
     """Returns the token needed to perform a captcha check"""
     return jsonify(CONFIG['CAPTCHA_CHALLENGE'])
